@@ -1,19 +1,22 @@
 const express = require('express');
+require('.dotenv').config
 const SpotifyWebApi = require('spotify-web-api-node');
 const cors = require("cors")
 const bodyParser = require("body-parser")
+const lyricsFinder = require("lyrics-finder")
 
 const app = express();
 app.use(cors())
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({extended:true}))
     
 
 app.post('/refresh', (req,res) => {
     const refreshToken = req.body.refreshToken
     const spotifyApi = new SpotifyWebApi({
-        redirectUri: 'http://localhost:3000',
-        clientId:'e45255142a77403ab3a51f0281adf6f2',
-        clientSecret:'681ef71939e64566bf6d58254c87c1fc',
+        redirectUri: process.env.REDIRECT_URI,
+        clientId:process.env.CLIENT_ID,
+        clientSecret:CLIENT_SECRET,
         refreshToken
 })
     spotifyApi.refreshAccessToken().then(
@@ -28,9 +31,9 @@ app.post('/refresh', (req,res) => {
 app.post('/login', (req, res) => {
     const code = req.body.code
     const spotifyApi = new SpotifyWebApi({
-        redirectUri: 'http://localhost:3000',
-        clientId:'e45255142a77403ab3a51f0281adf6f2',
-        clientSecret:'681ef71939e64566bf6d58254c87c1fc',
+        redirectUri: process.env.REDIRECT_URI,
+        clientId:process.env.CLIENT_ID,
+        clientSecret:CLIENT_SECRET,
     })
 
     spotifyApi.authorizationCodeGrant(code).then(data=>{
@@ -45,4 +48,11 @@ app.post('/login', (req, res) => {
     })
 })
 
+app.get('/lyrics', async (req,res) => {
+    const lyrics = 
+        (await lyricsFinder(req.query.artist, req.query.track)) || "No Lyrics Found"
+    res.json({lyrics})
+})
+
 app.listen(3001)
+
